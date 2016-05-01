@@ -134,6 +134,10 @@ HttpHandler::status_t HttpHandler::executeFull() {
 
   requestStatisticsAgentSetRequestStart();
 
+#ifdef USE_DEV_TIMERS
+  TRI_request_statistics_t::STATS = _statistics;
+#endif
+  
   try {
     prepareExecute();
 
@@ -185,6 +189,10 @@ HttpHandler::status_t HttpHandler::executeFull() {
 
   requestStatisticsAgentSetRequestEnd();
 
+#ifdef USE_DEV_TIMERS
+  TRI_request_statistics_t::STATS = nullptr;
+#endif
+  
   return status;
 }
 

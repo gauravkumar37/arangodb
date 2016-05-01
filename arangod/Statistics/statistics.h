@@ -29,6 +29,10 @@
 #include "Statistics/figures.h"
 
 struct TRI_request_statistics_t {
+#ifdef USE_DEV_TIMERS
+  static thread_local TRI_request_statistics_t* STATS;
+#endif
+
   TRI_request_statistics_t()
       : _readStart(0.0),
         _readEnd(0.0),
@@ -62,6 +66,10 @@ struct TRI_request_statistics_t {
     _tooLarge = false;
     _executeError = false;
     _ignore = false;
+#ifdef USE_DEV_TIMERS
+    _sections.clear();
+    _timings.clear();
+#endif
   }
 
   double _readStart;
@@ -82,6 +90,12 @@ struct TRI_request_statistics_t {
   bool _tooLarge;
   bool _executeError;
   bool _ignore;
+
+#ifdef USE_DEV_TIMERS
+  void* _id;
+  std::vector<std::string> _sections;
+  std::vector<double> _timings;
+#endif
 };
 
 struct TRI_connection_statistics_t {

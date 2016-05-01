@@ -34,6 +34,10 @@
 using namespace arangodb;
 using namespace arangodb::basics;
 
+#ifdef USE_DEV_TIMERS
+thread_local TRI_request_statistics_t* TRI_request_statistics_t::STATS = nullptr;
+#endif
+
 static size_t const QUEUE_SIZE = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,8 +79,15 @@ static void ProcessRequestStatistics(TRI_request_statistics_t* statistics) {
     TRI_MethodRequestsStatistics[(int)statistics->_requestType].incCounter();
 
     // check that the request was completely received and transmitted
-    if (statistics->_readStart != 0.0 && statistics->_writeEnd != 0.0) {
-      double totalTime = statistics->_writeEnd - statistics->_readStart;
+    if (statistics->_readStart != 0.0 && (statistics->_async || statistics->_writeEnd != 0.0)) {
+      double totalTime;
+      
+      if (statistics->_async) {
+	totalTime = statistics->_requestEnd - statistics->_readStart;
+      } else {
+	totalTime = statistics->_writeEnd - statistics->_readStart;
+      }
+      
       TRI_TotalTimeDistributionStatistics->addFigure(totalTime);
 
       double requestTime = statistics->_requestEnd - statistics->_requestStart;
@@ -101,11 +112,13 @@ static void ProcessRequestStatistics(TRI_request_statistics_t* statistics) {
 
 #ifdef USE_DEV_TIMERS
       LOG_TOPIC(INFO, Logger::REQUESTS)
-        << "\"http-request-timing\""
-        << ",total(us)," << round(1000000.0 * totalTime)
-        << ",io," << round(1000000.0 * ioTime)
-        << ",qeue," << round(1000000.0 * queueTime)
-        << ",request," << round(1000000.0 * requestTime)
+        << "\"http-request-timing\",\""
+	<< statistics->_id << "\","
+	<< (statistics->_async ? "async" : "sync")
+        << ",total(us)," << totalTime
+        << ",io," << ioTime
+        << ",qeue," << queueTime
+        << ",request," << requestTime
         << ",received," << statistics->_receivedBytes
         << ",sent," << statistics->_sentBytes;
 #endif
