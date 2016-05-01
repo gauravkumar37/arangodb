@@ -294,6 +294,7 @@ bool HttpServer::openEndpoint(Endpoint* endpoint) {
 void HttpServer::handleRequestDirectly(HttpCommTask* task,
                                        HttpHandler* handler) {
   HttpHandler::status_t status = handler->executeFull();
+  handler->transfer(task);
 
   switch (status._status) {
     case HttpHandler::HANDLER_FAILED:

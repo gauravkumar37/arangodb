@@ -84,14 +84,6 @@ HttpCommTask::HttpCommTask(HttpServer* server, TRI_socket_t socket,
              << _connectionInfo.clientAddress << ", client port "
              << _connectionInfo.clientPort;
 
-  // release the statistics object we got from the socket task first
-  // this is required at the moment for proper statistics calculation
-  connectionStatisticsAgentSetHttp();
-  ConnectionStatisticsAgent::release();
-
-  // acquire a statistics entry and set the type to HTTP
-  ConnectionStatisticsAgent::acquire();
-  connectionStatisticsAgentSetStart();
   connectionStatisticsAgentSetHttp();
 }
 
